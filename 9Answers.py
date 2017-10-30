@@ -1,4 +1,6 @@
 #Exercise 09
+###################################################################3
+
 # Question 1 zebrafish mutations
 
 #import pandas and read csv file
@@ -33,7 +35,7 @@ from plotnine import *
 ggplot(mut12,aes(x='x',y='y'))+geom_point()+theme_classic()
 
 #null hypothesis likelihood equation
-def fun1a(p,obs):
+def nllike(p,obs):
     B0=p[0]
     sigma=p[1]
     expected=B0
@@ -41,26 +43,26 @@ def fun1a(p,obs):
     return nll
 
 #Alternative hypothesis likelihood equation
-def fun1b(p,obs):
-    B02=p[0]
-    B12=p[1]
-    sigma2=p[1]
-    expected2=B02+B12*obs.x
-    nll=-1*norm(expected2,sigma2).logpdf(obs.y).sum()
+def nllike2(p,obs):
+    B0=p[0]
+    B1=p[1]
+    sigma=p[2]
+    expected=B0+B1*obs.x
+    nll=-1*norm(expected,sigma).logpdf(obs.y).sum()
     return nll
 
 #estimaitng parameters by minimizing the nll 
 initialVals1=numpy.array([1,1,1])
 
-fitNull=minimize(fun1a,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut12)
-fitAlt=minimize(fun1b,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut12)
+fitNull=minimize(nllike,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut12)
+fitAlt=minimize(nllike2,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut12)
 
 print(fitNull.x)
 print(fitAlt.x)
 
 from scipy.stats import chi2
 D=(2*(fitAlt.fun-fitNull.fun))
-mut12answer=1-chi2.cdf(x=D,df=1)
+mut12answer=(1-chi2.cdf(x=D,df=1))
 print('mutation M124K p value')
 print(mut12answer)
 
@@ -93,7 +95,80 @@ print('mutation I213N p value')
 print(mut32answer)
 
 
-
 ## currently this does not produce the correct p value according to the p value sent to us from Stuart.
-## the code here includes df subsets for all 3 mutations but does not find the p value for all 3. only 1
-## going to correct any mistakes before adding the code for mutation 2 and mutation 3
+## the code here includes df subsets for all 3 mutations and does find the p value for all 3. 
+## its just not right
+
+############################################################################################################
+# question number 2
+import pandas
+file2=pandas.read_csv("MmarinumGrowth.csv",header=0,sep=",")
+
+ggplot(file2,aes(x='S',y='u'))+geom_point()+theme_classic()
+
+def nllike(p,obs):
+    B0=p[0]
+    B1=p[1]
+    sigma=p[2]
+    expected=B0
+    nll=-1*norm(expected,sigma).logpdf(obs.S).sum()
+    return nll
+
+guess2=numpy.array([1000, 1000, 1000])
+
+fitNull2=minimize(nllike,guess2, method="Nelder-Mead",options={'disp': True}, args=file2)
+
+print(fitNull2.x)
+
+###################################################################################################################
+
+#question 3
+import pandas
+file3=pandas.read_csv("leafDecomp.csv",header=0,sep=",")
+
+ggplot(file3,aes(x='Ms',y='decomp'))+geom_point()+theme_classic()
+#constant fit 
+def nllike(p,obs):
+    B0=p[0]
+    B1=p[1]
+    sigma=p[2]
+    expected=B0
+    nll=-1*norm(expected,sigma).logpdf(obs.decomp).sum()
+    return nll
+
+guess3=numpy.array([1, 1, 1])
+
+fitNull3constant=minimize(nllike,guess3, method="Nelder-Mead",options={'disp': True}, args=file3)
+
+print('constant fit')
+print(fitNull3constant.x)
+
+### linear fit
+def nllike(p,obs):
+    B0=p[0]
+    B1=p[1]
+    sigma=p[2]
+    expected=B0+B1*obs.Ms 
+    nll=-1*norm(expected,sigma).logpdf(obs.decomp).sum()
+    return nll
+
+fitNull3linear=minimize(nllike,guess3, method="Nelder-Mead",options={'disp': True}, args=file3)
+
+print('linear fit')
+print(fitNull3linear)
+
+### quad fit --- doesn't work
+def nllike(p,obs):
+    B0=p[0]
+    B1=p[1]
+    B2=p[2]
+    sigma=p[2]
+    expected=B0+B1*obs.Ms+B2*((obs.Ms)*(obs.Ms))
+    nll=-1*norm(expected,sigma).logpdf(obs.decomp).sum()
+    return nll
+
+fitNull3quad=minimize(nllike,guess3, method="Nelder-Mead",options={'disp': True}, args=file3)
+
+print('quadratic fit')
+print(fitNull3quad)
+
