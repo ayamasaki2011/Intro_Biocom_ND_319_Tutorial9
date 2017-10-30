@@ -61,35 +61,35 @@ print(fitNull.x)
 print(fitAlt.x)
 
 from scipy.stats import chi2
-D=(2*(fitAlt.fun-fitNull.fun))
+D=(2*(fitNull.fun-fitAlt.fun))
 mut12answer=(1-chi2.cdf(x=D,df=1))
 print('mutation M124K p value')
 print(mut12answer)
 
 
 ## for mutation 2
-fitNull=minimize(fun1a,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut22)
-fitAlt=minimize(fun1b,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut22)
+fitNull=minimize(nllike,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut22)
+fitAlt=minimize(nllike2,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut22)
 
 print(fitNull.x)
 print(fitAlt.x)
 
 from scipy.stats import chi2
-D=(2*(fitAlt.fun-fitNull.fun))
+D=(2*(fitNull.fun-fitAlt.fun))
 mut22answer=1-chi2.cdf(x=D,df=1)
 print('mutation V456D p value')
 print(mut22answer)
 
 ##for mutation 3
 
-fitNull=minimize(fun1a,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut32)
-fitAlt=minimize(fun1b,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut32)
+fitNull=minimize(nllike,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut32)
+fitAlt=minimize(nllike2,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut32)
 
 print(fitNull.x)
 print(fitAlt.x)
 
 from scipy.stats import chi2
-D=(2*(fitAlt.fun-fitNull.fun))
+D=(2*(fitNull.fun-fitAlt.fun))
 mut32answer=1-chi2.cdf(x=D,df=1)
 print('mutation I213N p value')
 print(mut32answer)
@@ -110,11 +110,11 @@ def nllike(p,obs):
     B0=p[0]
     B1=p[1]
     sigma=p[2]
-    expected=B0
-    nll=-1*norm(expected,sigma).logpdf(obs.S).sum()
+    expected=B0+B1*obs.S
+    nll=-1*norm(expected,sigma).logpdf(obs.u).sum()
     return nll
 
-guess2=numpy.array([1000, 1000, 1000])
+guess2=numpy.array([1, 1, 1])
 
 fitNull2=minimize(nllike,guess2, method="Nelder-Mead",options={'disp': True}, args=file2)
 
