@@ -95,22 +95,19 @@ print('mutation I213N p value')
 print(mut32answer)
 
 
-## currently this does not produce the correct p value according to the p value sent to us from Stuart.
-## the code here includes df subsets for all 3 mutations and does find the p value for all 3. 
-## its just not right
-
 ############################################################################################################
 # question number 2
+
 import pandas
 file2=pandas.read_csv("MmarinumGrowth.csv",header=0,sep=",")
 
 ggplot(file2,aes(x='S',y='u'))+geom_point()+theme_classic()
 
 def nllike(p,obs):
-    B0=p[0]
-    B1=p[1]
+    umax=p[0]
+    Ks=p[1]
     sigma=p[2]
-    expected=B0+B1*obs.S
+    expected=umax*obs.S/(obs.S+Ks)
     nll=-1*norm(expected,sigma).logpdf(obs.u).sum()
     return nll
 
@@ -152,6 +149,8 @@ def nllike(p,obs):
     nll=-1*norm(expected,sigma).logpdf(obs.decomp).sum()
     return nll
 
+guess3=numpy.array([1, 1, 1])
+
 fitNull3linear=minimize(nllike,guess3, method="Nelder-Mead",options={'disp': True}, args=file3)
 
 print('linear fit')
@@ -159,13 +158,15 @@ print(fitNull3linear)
 
 ### quad fit --- doesn't work
 def nllike(p,obs):
-    B0=p[0]
-    B1=p[1]
-    B2=p[2]
-    sigma=p[2]
-    expected=B0+B1*obs.Ms+B2*((obs.Ms)*(obs.Ms))
+    a=p[0]
+    b=p[1]
+    c=p[2]
+    sigma=p[3]
+    expected=a+b*obs.Ms+c*((obs.Ms)*(obs.Ms))
     nll=-1*norm(expected,sigma).logpdf(obs.decomp).sum()
     return nll
+
+guess3=numpy.array([180, 15, -0.1, 10])
 
 fitNull3quad=minimize(nllike,guess3, method="Nelder-Mead",options={'disp': True}, args=file3)
 
