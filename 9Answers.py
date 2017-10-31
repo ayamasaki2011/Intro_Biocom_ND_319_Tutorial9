@@ -1,5 +1,5 @@
 #Exercise 09
-###################################################################3
+###################################################################
 
 # Question 1 zebrafish mutations
 
@@ -31,11 +31,13 @@ from scipy.optimize import minimize
 from scipy.stats import norm
 from plotnine import *
 
-#plot the values for WT at 0 and mutation 1 at 1 --- not sure if we need to do this
+#plot the values for WT at 0 and mutation 1,2,3 at 1 --- dont have to plot anything but it helped me visualize
 ggplot(mut12,aes(x='x',y='y'))+geom_point()+theme_classic()
+ggplot(mut22,aes(x='x',y='y'))+geom_point()+theme_classic()
+ggplot(mut32,aes(x='x',y='y'))+geom_point()+theme_classic()
 
 #null hypothesis likelihood equation
-def nllike(p,obs):
+def null(p,obs):
     B0=p[0]
     sigma=p[1]
     expected=B0
@@ -43,7 +45,7 @@ def nllike(p,obs):
     return nll
 
 #Alternative hypothesis likelihood equation
-def nllike2(p,obs):
+def alt(p,obs):
     B0=p[0]
     B1=p[1]
     sigma=p[2]
@@ -54,8 +56,8 @@ def nllike2(p,obs):
 #estimaitng parameters by minimizing the nll 
 initialVals1=numpy.array([1,1,1])
 
-fitNull=minimize(nllike,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut12)
-fitAlt=minimize(nllike2,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut12)
+fitNull=minimize(null,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut12)
+fitAlt=minimize(alt,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut12)
 
 print(fitNull.x)
 print(fitAlt.x)
@@ -68,8 +70,8 @@ print(mut12answer)
 
 
 ## for mutation 2
-fitNull=minimize(nllike,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut22)
-fitAlt=minimize(nllike2,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut22)
+fitNull=minimize(null,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut22)
+fitAlt=minimize(alt,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut22)
 
 print(fitNull.x)
 print(fitAlt.x)
@@ -82,8 +84,8 @@ print(mut22answer)
 
 ##for mutation 3
 
-fitNull=minimize(nllike,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut32)
-fitAlt=minimize(nllike2,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut32)
+fitNull=minimize(null,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut32)
+fitAlt=minimize(alt,initialVals1, method="Nelder-Mead",options={'disp': True}, args=mut32)
 
 print(fitNull.x)
 print(fitAlt.x)
@@ -98,10 +100,15 @@ print(mut32answer)
 ############################################################################################################
 # question number 2
 
+#import and read file for question 2
 import pandas
 file2=pandas.read_csv("MmarinumGrowth.csv",header=0,sep=",")
 
+#again, dont need to plot but it helped me with the dataset
 ggplot(file2,aes(x='S',y='u'))+geom_point()+theme_classic()
+
+#changed the typical equation to the equation given -see expected=...
+## and aligned the correct variable names with the given symbols from the exercise question
 
 def nllike(p,obs):
     umax=p[0]
@@ -111,53 +118,66 @@ def nllike(p,obs):
     nll=-1*norm(expected,sigma).logpdf(obs.u).sum()
     return nll
 
+#estimaitng parameters by minimizing the nll 
 guess2=numpy.array([1, 1, 1])
 
 fitNull2=minimize(nllike,guess2, method="Nelder-Mead",options={'disp': True}, args=file2)
 
 print(fitNull2.x)
+print('umax Ks  sigma')
 
 ###################################################################################################################
 
 #question 3
+
+#import and read the file for question 3
 import pandas
 file3=pandas.read_csv("leafDecomp.csv",header=0,sep=",")
 
+#same notes as before - dont have to do a plot but it helped me
 ggplot(file3,aes(x='Ms',y='decomp'))+geom_point()+theme_classic()
-#constant fit 
-def nllike(p,obs):
-    B0=p[0]
-    B1=p[1]
+
+#constant fit equation
+def constantfit(p,obs):
+    a=p[0]
     sigma=p[2]
-    expected=B0
+    expected=a
     nll=-1*norm(expected,sigma).logpdf(obs.decomp).sum()
     return nll
 
 guess3=numpy.array([1, 1, 1])
 
-fitNull3constant=minimize(nllike,guess3, method="Nelder-Mead",options={'disp': True}, args=file3)
+fitNull3constant=minimize(constantfit,guess3, method="Nelder-Mead",options={'disp': True}, args=file3)
 
 print('constant fit')
 print(fitNull3constant.x)
 
+
+
 ### linear fit
-def nllike(p,obs):
-    B0=p[0]
-    B1=p[1]
+def linearfit(p,obs):
+    a=p[0]
+    b=p[1]
     sigma=p[2]
-    expected=B0+B1*obs.Ms 
+    expected=a+b*obs.Ms 
     nll=-1*norm(expected,sigma).logpdf(obs.decomp).sum()
     return nll
 
 guess3=numpy.array([1, 1, 1])
 
-fitNull3linear=minimize(nllike,guess3, method="Nelder-Mead",options={'disp': True}, args=file3)
+fitNull3linear=minimize(linearfit,guess3, method="Nelder-Mead",options={'disp': True}, args=file3)
 
 print('linear fit')
 print(fitNull3linear)
 
-### quad fit --- doesn't work
-def nllike(p,obs):
+from scipy.stats import chi2
+D=(2*(fitNull3constant.fun-fitNull3linear.fun))
+linearVSconstant=(1-chi2.cdf(x=D,df=1))
+print('linear vs constant p value')
+print(linearVSconstant)
+
+### quad fit
+def quadfit(p,obs):
     a=p[0]
     b=p[1]
     c=p[2]
@@ -166,10 +186,15 @@ def nllike(p,obs):
     nll=-1*norm(expected,sigma).logpdf(obs.decomp).sum()
     return nll
 
-guess3=numpy.array([180, 15, -0.1, 10])
+guess3=numpy.array([180, 15.7, -0.11, 10])
 
-fitNull3quad=minimize(nllike,guess3, method="Nelder-Mead",options={'disp': True}, args=file3)
+fitNull3quad=minimize(quadfit,guess3, method="Nelder-Mead",options={'disp': True}, args=file3)
 
 print('quadratic fit')
 print(fitNull3quad)
 
+from scipy.stats import chi2
+D=(2*(fitNull3constant.fun-fitNull3quad.fun))
+quadVSconstant=(1-chi2.cdf(x=D,df=1))
+print('quadratic vs constant p value')
+print(quadVSconstant)
